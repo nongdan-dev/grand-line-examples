@@ -1,0 +1,12 @@
+[package]
+name = "saas-example"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+grand-line = { path = "../../grand-line", features = ["sqlite", "tracing"] }
+models = { path = "./models" }
+
+async-graphql-axum = "7.0.11"
+axum = "0.7.7"
+serde = { version = "1.0.210", default-features = false, features = ["derive", "std"] }

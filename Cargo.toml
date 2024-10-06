@@ -1,0 +1,3 @@
+[workspace]
+members = ["saas", "saas/models", "simple-todo"]
+resolver = "2"
