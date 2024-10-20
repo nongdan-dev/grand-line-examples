@@ -1,0 +1,12 @@
+[package]
+name = "saas-example"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+# local
+models = { path = "./models" }
+
+# grand_line
+grand-line = { path = "../../grand-line", features = ["sqlite", "axum"] }
+serde = { version = "1.0.210", default-features = false, features = ["derive", "std"] }
