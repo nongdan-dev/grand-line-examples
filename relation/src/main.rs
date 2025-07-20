@@ -7,7 +7,6 @@ use crate::prelude::*;
 use async_graphql_axum::GraphQL;
 use axum::{routing::get_service, serve, Router};
 use grand_line::*;
-use std::error::Error;
 use tokio::net::TcpListener;
 
 #[tokio::main]

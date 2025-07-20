@@ -56,7 +56,7 @@ fn resolver() {
     let am = active_create!(Todo {
         content: data.content
     });
-    am.insert(&tx).await?.into()
+    am.insert(tx).await?.into()
 }
 
 // update a Todo content
@@ -67,23 +67,24 @@ pub struct TodoUpdate {
 #[update(Todo)]
 fn resolver() {
     println!("todoUpdate id={} data={}", id, json(&data)?);
-    let r = Todo::gql_detail(ctx, &tx, &id).await?;
     let am = active_update!(Todo {
-        id,
+        id: id.clone(),
         content: data.content
     });
-    am.update(&tx).await?;
-    r
+    am.update(tx).await?;
+    Todo::gql_detail(ctx, tx, &id).await?
 }
 
 // custom resolver name and inputs
 #[update(Todo, resolver_inputs = true)]
 fn todoUpdateDone(id: String, done: bool) {
     println!("todoUpdateDone id={} done={}", id, done);
-    let r = Todo::gql_detail(ctx, &tx, &id).await?;
-    let am = active_update!(Todo { id, done });
-    am.update(&tx).await?;
-    r
+    let am = active_update!(Todo {
+        id: id.clone(),
+        done,
+    });
+    am.update(tx).await?;
+    Todo::gql_detail(ctx, tx, &id).await?
 }
 
 // delete a Todo by id
@@ -96,7 +97,7 @@ fn resolver() {
 #[query]
 fn todoCountDone() -> u64 {
     let f = filter!(Todo { done: true });
-    f.query().count(&tx).await?
+    f.query().count(tx).await?
 }
 
 // manual mutation: delete all done Todo
@@ -104,11 +105,11 @@ fn todoCountDone() -> u64 {
 fn todoDeleteDone() -> Vec<TodoGql> {
     let f = filter!(Todo { done: true });
     let q = Todo::gql_select_id(ctx, f.query());
-    let arr = q.all(&tx).await?;
+    let arr = q.all(tx).await?;
     let f = filter!(Todo {
         id_in: arr.iter().filter_map(|v| v.id.clone()).collect()
     });
-    Todo::delete_many().filter(f.condition()).exec(&tx).await?;
+    Todo::delete_many().filter(f.condition()).exec(tx).await?;
     arr
 }
 
@@ -116,7 +117,6 @@ use async_graphql::{EmptySubscription, MergedObject, Schema};
 use async_graphql_axum::GraphQL;
 use axum::{routing::get_service, serve, Router};
 use sea_orm::prelude::*;
-use std::error::Error;
 use tokio::net::TcpListener;
 
 #[derive(Default, MergedObject)]
@@ -144,7 +144,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .init();
 
     let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
-        .data(init_db().await?)
+        // TODO: add tracing extension with feature flag tracing
+        .extension(TxExtension)
+        .data(GrandLineContext::new(init_db().await?))
         .finish();
 
     let app = Router::new().route(

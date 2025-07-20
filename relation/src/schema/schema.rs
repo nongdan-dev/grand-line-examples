@@ -11,6 +11,8 @@ pub struct Query(
 
 pub fn init_schema(db: DatabaseConnection) -> Schema<Query, EmptyMutation, EmptySubscription> {
     Schema::build(Query::default(), EmptyMutation, EmptySubscription)
-        .data(Context::new(db))
+        // TODO: add tracing extension with feature flag tracing
+        .extension(TxExtension)
+        .data(GrandLineContext::new(db))
         .finish()
 }
