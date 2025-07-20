@@ -1,0 +1,8 @@
+[package]
+name = "grand-line-examples-relation"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+grand-line = { path = "../../grand-line", features = ["sqlite", "axum", "tracing"] }
+serde = { version = "1.0.219", default-features = false, features = ["derive", "std"] }

@@ -52,7 +52,7 @@ pub struct TodoCreate {
 }
 #[create(Todo)]
 fn resolver() {
-    println!("todoCreate content={}", data.content);
+    println!("todoCreate data={}", json(&data)?);
     let am = active_create!(Todo {
         content: data.content
     });
@@ -66,7 +66,7 @@ pub struct TodoUpdate {
 }
 #[update(Todo)]
 fn resolver() {
-    println!("todoUpdate id={} content={}", id, data.content);
+    println!("todoUpdate id={} data={}", id, json(&data)?);
     let r = Todo::gql_detail(ctx, &tx, &id).await?;
     let am = active_update!(Todo {
         id,
