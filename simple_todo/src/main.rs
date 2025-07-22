@@ -98,9 +98,8 @@ fn todoCountDone() -> u64 {
 // manual mutation: delete all done Todo
 #[mutation]
 fn todoDeleteDone() -> Vec<TodoGql> {
-    let arr = Todo::gql_select_id(filter!(Todo { done: true }).query())
-        .all(tx)
-        .await?;
+    let q = filter!(Todo { done: true }).query();
+    let arr = Todo::gql_select_id(ctx, q).all(tx).await?;
     let f = filter!(Todo {
         id_in: arr.iter().filter_map(|v| v.id.clone()).collect()
     });
@@ -108,7 +107,7 @@ fn todoDeleteDone() -> Vec<TodoGql> {
     arr
 }
 
-use async_graphql::{EmptySubscription, MergedObject, Schema};
+use async_graphql::{extensions::Tracing, EmptySubscription, MergedObject, Schema};
 use async_graphql_axum::GraphQL;
 use axum::{routing::get_service, serve, Router};
 use std::sync::Arc;
@@ -139,6 +138,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .init();
 
     let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
+        .extension(Tracing)
         .extension(GrandLineExtension)
         .data(Arc::new(init_db().await?))
         .finish();
