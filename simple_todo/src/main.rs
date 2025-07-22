@@ -67,24 +67,20 @@ pub struct TodoUpdate {
 #[update(Todo)]
 fn resolver() {
     println!("todoUpdate id={} data={}", id, json(&data)?);
-    let am = active_update!(Todo {
+    active_update!(Todo {
         id: id.clone(),
         content: data.content
-    });
-    am.update(tx).await?;
-    Todo::gql_detail(ctx, tx, &id).await?
+    })
 }
 
 // custom resolver name and inputs
 #[update(Todo, resolver_inputs = true)]
 fn todoUpdateDone(id: String, done: bool) {
     println!("todoUpdateDone id={} done={}", id, done);
-    let am = active_update!(Todo {
+    active_update!(Todo {
         id: id.clone(),
         done,
-    });
-    am.update(tx).await?;
-    Todo::gql_detail(ctx, tx, &id).await?
+    })
 }
 
 // delete a Todo by id
@@ -103,9 +99,9 @@ fn todoCountDone() -> u64 {
 // manual mutation: delete all done Todo
 #[mutation]
 fn todoDeleteDone() -> Vec<TodoGql> {
-    let f = filter!(Todo { done: true });
-    let q = Todo::gql_select_id(ctx, f.query());
-    let arr = q.all(tx).await?;
+    let arr = Todo::gql_select_id(filter!(Todo { done: true }).query())
+        .all(tx)
+        .await?;
     let f = filter!(Todo {
         id_in: arr.iter().filter_map(|v| v.id.clone()).collect()
     });
@@ -116,7 +112,7 @@ fn todoDeleteDone() -> Vec<TodoGql> {
 use async_graphql::{EmptySubscription, MergedObject, Schema};
 use async_graphql_axum::GraphQL;
 use axum::{routing::get_service, serve, Router};
-use sea_orm::prelude::*;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 
 #[derive(Default, MergedObject)]
@@ -144,15 +140,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .init();
 
     let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
-        // TODO: add tracing extension with feature flag tracing
-        .extension(TxExtension)
-        .data(GrandLineContext::new(init_db().await?))
+        .extension(GrandLineExtension)
+        .data(Arc::new(init_db().await?))
         .finish();
 
-    let app = Router::new().route(
-        "/api/graphql",
-        get_service(GraphQL::new(schema.clone())).post_service(GraphQL::new(schema)),
-    );
+    let svc = GraphQL::new(schema);
+    let app = Router::new().route("/api/graphql", get_service(svc.clone()).post_service(svc));
 
     let port = 4000;
     let addr = format!("0.0.0.0:{}", port);
