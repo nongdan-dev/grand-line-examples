@@ -34,18 +34,20 @@ async fn try_authenticate_without_cache(ctx: &AuthContext) -> Option<Arc<LoginSe
         return None;
     }
     let t = token.unwrap();
+    //TODO: create find login session by token
     let s = find_login_session_by_id(&t.id).await;
     if s.is_none() {
         return None;
     }
     let s = s.unwrap();
+    //TODO: check if the token is valid
     if s.secret != t.secret || is_login_token_expired(&s) {
         return None;
     }
     Some(Arc::new(s))
 }
 
-fn get_login_token(ctx: &AuthContext) -> Option<LoginToken> {
-    
+fn get_login_token(ctx: &AuthContext) -> Option<String> {
+    //TODO
     None
 }
