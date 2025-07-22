@@ -6,4 +6,6 @@ edition = "2021"
 [dependencies]
 # grand_line
 grand-line = { path = "../../grand-line", features = ["sqlite", "axum", "tracing"] }
+regex = "1.11.1"
 serde = { version = "1.0.210", default-features = false, features = ["derive", "std"] }
+validator = "0.20.0"

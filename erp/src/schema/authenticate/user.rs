@@ -1,6 +1,6 @@
 use grand_line::*;
 
-#[model(no_by_id = true)]
+#[model]
 
 pub struct User {
     pub email: String,
