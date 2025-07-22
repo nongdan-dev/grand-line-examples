@@ -15,19 +15,20 @@ use axum::{routing::get_service, serve, Router};
 use grand_line::async_graphql_axum::GraphQL;
 use std::sync::Arc;
 use tokio::net::TcpListener;
+use tracing::Level;
+use tracing_subscriber::fmt::Subscriber;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // TODO: add feature flag tracing
-    tracing_subscriber::fmt::Subscriber::builder()
-        .with_max_level(tracing::Level::DEBUG)
-        .init();
+    Subscriber::builder().with_max_level(Level::DEBUG).init();
 
     let db = Arc::new(init_db().await?);
     let schema = init_schema(db);
     let svc = GraphQL::new(schema);
     let router = get_service(svc.clone()).post_service(svc);
     let app = Router::new().route("/api/graphql", router);
+    // TODO: catch panic unwind using axum layer
 
     let port = 4000;
     let addr = format!("0.0.0.0:{}", port);

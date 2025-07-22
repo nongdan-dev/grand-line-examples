@@ -66,6 +66,7 @@ pub struct TodoUpdate {
 #[update(Todo)]
 fn resolver() {
     println!("todoUpdate id={} data={}", id, json(&data)?);
+    Todo::must_exists_by_id(tx, &id).await?;
     active_update!(Todo {
         id: id.clone(),
         content: data.content
@@ -74,11 +75,12 @@ fn resolver() {
 
 // custom resolver name and inputs
 #[update(Todo, resolver_inputs = true)]
-fn todoUpdateDone(id: String, done: bool) {
-    println!("todoUpdateDone id={} done={}", id, done);
+fn todoToggleDone(id: String) {
+    println!("todoToggleDone id={}", id);
+    let todo = Todo::must_find_by_id(tx, &id).await?;
     active_update!(Todo {
         id: id.clone(),
-        done,
+        done: !todo.done,
     })
 }
 
@@ -92,13 +94,13 @@ fn resolver() {
 #[query]
 fn todoCountDone() -> u64 {
     let f = filter!(Todo { done: true });
-    f.query().count(tx).await?
+    f.select().count(tx).await?
 }
 
 // manual mutation: delete all done Todo
 #[mutation]
 fn todoDeleteDone() -> Vec<TodoGql> {
-    let q = filter!(Todo { done: true }).query();
+    let q = filter!(Todo { done: true }).select();
     let arr = Todo::gql_select_id(ctx, q).all(tx).await?;
     let f = filter!(Todo {
         id_in: arr.iter().filter_map(|v| v.id.clone()).collect()
@@ -107,11 +109,38 @@ fn todoDeleteDone() -> Vec<TodoGql> {
     arr
 }
 
-use async_graphql::{extensions::Tracing, EmptySubscription, MergedObject, Schema};
+// ----------------------------------------------------------------------------
+// main axum listener
+
 use async_graphql_axum::GraphQL;
 use axum::{routing::get_service, serve, Router};
 use std::sync::Arc;
 use tokio::net::TcpListener;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    init_tracing();
+
+    let db = Arc::new(init_db().await?);
+    let schema = init_schema(db);
+    let svc = GraphQL::new(schema);
+    let router = get_service(svc.clone()).post_service(svc);
+    let app = Router::new().route("/api/graphql", router);
+
+    let port = 4000;
+    let addr = format!("0.0.0.0:{}", port);
+    let listener = TcpListener::bind(addr).await?;
+
+    println!("listening on port {}", port);
+    serve(listener, app).await?;
+
+    Ok(())
+}
+
+// ----------------------------------------------------------------------------
+// init schema
+
+use async_graphql::{extensions::Tracing, EmptySubscription, MergedObject, Schema};
 
 #[derive(Default, MergedObject)]
 struct Query(
@@ -126,35 +155,21 @@ struct Query(
 struct Mutation(
     TodoCreateMutation,
     TodoUpdateMutation,
-    TodoUpdateDoneMutation,
+    TodoToggleDoneMutation,
     TodoDeleteMutation,
     TodoDeleteDoneMutation,
 );
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::fmt::Subscriber::builder()
-        .with_max_level(tracing::Level::DEBUG)
-        .init();
-
-    let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
+fn init_schema(db: Arc<DatabaseConnection>) -> Schema<Query, Mutation, EmptySubscription> {
+    Schema::build(Query::default(), Mutation::default(), EmptySubscription)
         .extension(Tracing)
         .extension(GrandLineExtension)
-        .data(Arc::new(init_db().await?))
-        .finish();
-
-    let svc = GraphQL::new(schema);
-    let app = Router::new().route("/api/graphql", get_service(svc.clone()).post_service(svc));
-
-    let port = 4000;
-    let addr = format!("0.0.0.0:{}", port);
-    let listener = TcpListener::bind(addr).await?;
-
-    println!("listening on port {}", port);
-    serve(listener, app).await?;
-
-    Ok(())
+        .data(db)
+        .finish()
 }
+
+// ----------------------------------------------------------------------------
+// init db
 
 async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     let db = Database::connect("sqlite::memory:").await?;
@@ -192,4 +207,14 @@ async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     .await?;
 
     Ok(db)
+}
+
+// ----------------------------------------------------------------------------
+// init tracing
+
+use tracing::Level;
+use tracing_subscriber::fmt::Subscriber;
+
+fn init_tracing() {
+    Subscriber::builder().with_max_level(Level::DEBUG).init();
 }
