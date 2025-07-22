@@ -6,3 +6,9 @@ fn resolver() {
     // TODO:
     (None, None)
 }
+
+#[count(Todo)]
+fn resolver() {
+    // TODO:
+    None
+}

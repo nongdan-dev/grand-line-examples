@@ -1,27 +1,33 @@
-mod schema;
+mod db;
+mod graphql;
+
 mod prelude {
-    pub use crate::schema::*;
+    pub use crate::db::*;
+    pub use crate::graphql::*;
+
+    pub use grand_line::*;
+    pub use sea_orm::prelude::*;
+    pub use sea_orm::*;
 }
 
 use crate::prelude::*;
-use async_graphql_axum::GraphQL;
 use axum::{routing::get_service, serve, Router};
-use grand_line::*;
+use grand_line::async_graphql_axum::GraphQL;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    // TODO: add feature flag tracing
     tracing_subscriber::fmt::Subscriber::builder()
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    let db = init_db().await?;
+    let db = Arc::new(init_db().await?);
     let schema = init_schema(db);
-
-    let app = Router::new().route(
-        "/api/graphql",
-        get_service(GraphQL::new(schema.clone())).post_service(GraphQL::new(schema)),
-    );
+    let svc = GraphQL::new(schema);
+    let router = get_service(svc.clone()).post_service(svc);
+    let app = Router::new().route("/api/graphql", router);
 
     let port = 4000;
     let addr = format!("0.0.0.0:{}", port);
