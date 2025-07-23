@@ -24,6 +24,45 @@ pub async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     let user_id1 = users.get(1).map(|u| u.id.clone());
 
     db.execute_unprepared(
+        "CREATE TABLE org (
+            id TEXT PRIMARY KEY NOT NULL
+            , name TEXT NOT NULL
+            , created_at TEXT NOT NULL
+            , updated_at TEXT
+        );",
+    )
+    .await?;
+
+    Org::insert_many(vec![active_create!(Org { name: "Fringe" })])
+        .exec(&db)
+        .await?;
+    let orgs = Org::find().all(&db).await?;
+    let org_id0 = orgs.get(0).map(|o| o.id.clone());
+
+    db.execute_unprepared(
+        "CREATE TABLE user_in_org (
+            id TEXT PRIMARY KEY NOT NULL
+            , user_id TEXT NOT NULL
+            , org_id TEXT NOT NULL
+            , created_at TEXT NOT NULL
+            , updated_at TEXT
+        );",
+    )
+    .await?;
+    UserInOrg::insert_many(vec![
+        active_create!(UserInOrg {
+            user_id: user_id0.as_ref().unwrap().to_string(),
+            org_id: org_id0.as_ref().unwrap().to_string(),
+        }),
+        active_create!(UserInOrg {
+            user_id: user_id1.as_ref().unwrap().to_string(),
+            org_id: org_id0.as_ref().unwrap().to_string(),
+        }),
+    ])
+    .exec(&db)
+    .await?;
+
+    db.execute_unprepared(
         "CREATE TABLE todo (
             id TEXT PRIMARY KEY NOT NULL
             , content TEXT NOT NULL

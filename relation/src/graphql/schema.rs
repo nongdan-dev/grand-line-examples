@@ -8,6 +8,8 @@ pub struct Query(
     TodoCountQuery,
     UserSearchQuery,
     UserCountQuery,
+    OrgSearchQuery,
+    OrgCountQuery,
 );
 
 pub fn init_schema(db: Arc<DatabaseConnection>) -> Schema<Query, EmptyMutation, EmptySubscription> {
