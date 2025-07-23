@@ -6,7 +6,8 @@ use std::sync::Arc;
 pub struct Query(
     TodoSearchQuery,
     TodoCountQuery,
-    //
+    UserSearchQuery,
+    UserCountQuery,
 );
 
 pub fn init_schema(db: Arc<DatabaseConnection>) -> Schema<Query, EmptyMutation, EmptySubscription> {
