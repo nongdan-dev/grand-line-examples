@@ -1,21 +1,13 @@
-use crate::prelude::*;
-use grand_line::{async_trait::async_trait, axum::http::HeaderMap, *};
+use crate::{
+    context::authenticate::{must_anonymous, must_authenticate, try_authenticate, AuthError},
+    prelude::*,
+};
+use grand_line::{async_trait::async_trait, axum::http::HeaderMap, sea_orm::DatabaseConnection, *};
 use std::sync::Arc;
 
-#[derive(Debug)]
-pub struct AuthError {
-    pub message: String,
-}
-
-impl AuthError {
-    pub fn new(msg: &str) -> Self {
-        Self {
-            message: msg.to_string(),
-        }
-    }
-}
 #[derive(Clone)]
 pub struct AuthContext {
+    pub db: Arc<DatabaseConnection>,
     pub headers: HeaderMap,
     pub ip_address: Option<String>,
     pub user_agent: Option<String>,
@@ -28,15 +20,15 @@ pub struct Cache {
 #[async_trait]
 #[async_trait]
 pub trait AuthContextTrait {
-    fn new(headers: HeaderMap) -> Self;
+    fn new(headers: HeaderMap,db: Arc<DatabaseConnection>) -> Self;
     async fn must_anonymous(&self) -> Result<(), AuthError>;
-    async fn try_authenticate(&self) -> Option<Arc<LoginSession>>;
-    async fn must_authenticate(&self) -> Result<Arc<LoginSession>, AuthError>;
+    async fn try_authenticate(&self) -> Result<LoginSession,AuthError> ;
+    async fn must_authenticate(&self) -> Result<LoginSession,AuthError> ;
 }
 #[async_trait]
 
 impl AuthContextTrait for AuthContext {
-    fn new(headers: HeaderMap) -> Self {
+    fn new(headers: HeaderMap,db:Arc<DatabaseConnection> ) -> Self {
         let ip_address = headers
             .get("x-forwarded-for")
             .and_then(|v| v.to_str().ok())
@@ -45,20 +37,22 @@ impl AuthContextTrait for AuthContext {
             .get("user-agent")
             .and_then(|v| v.to_str().ok())
             .map(String::from);
+
         Self {
             headers,
             ip_address,
             user_agent,
             cache: Arc::new(tokio::sync::Mutex::new(Cache::default())),
+            db
         }
     }
     async fn must_anonymous(&self) -> Result<(), AuthError> {
         must_anonymous(self).await
     }
-    async fn try_authenticate(&self) -> Option<Arc<LoginSession>> {
+    async fn try_authenticate(&self) ->Result<LoginSession,AuthError> {
         try_authenticate(self).await
     }
-    async fn must_authenticate(&self) -> Result<Arc<LoginSession>, AuthError> {
+    async fn must_authenticate(&self) -> Result<LoginSession, AuthError> {
         must_authenticate(self).await
     }
 }

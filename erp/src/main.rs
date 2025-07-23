@@ -3,6 +3,7 @@ mod custom_scalars;
 mod routers;
 mod schema;
 mod config;
+mod libs;
 mod prelude {
     pub use crate::custom_scalars::*;
     pub use crate::schema::*;

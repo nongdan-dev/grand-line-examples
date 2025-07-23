@@ -1,7 +1,6 @@
 use grand_line::*;
 use crate::prelude::*;
 #[model]
-
 pub struct LoginSession {
     pub user_id: String,
     pub secret: String,

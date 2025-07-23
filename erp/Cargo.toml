@@ -4,8 +4,10 @@ version = "0.0.0"
 edition = "2021"
 
 [dependencies]
+cookie = "0.18.1"
 # grand_line
 grand-line = { path = "../../grand-line", features = ["sqlite", "axum", "tracing"] }
 regex = "1.11.1"
 serde = { version = "1.0.210", default-features = false, features = ["derive", "std"] }
+serde_qs = "0.15.0"
 validator = "0.20.0"
