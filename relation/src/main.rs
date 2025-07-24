@@ -11,9 +11,8 @@ mod prelude {
 }
 
 use crate::prelude::*;
-use axum::{routing::get_service, serve, Router};
+use axum::{Router, routing::get_service, serve};
 use grand_line::async_graphql_axum::GraphQL;
-use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::Level;
 use tracing_subscriber::fmt::Subscriber;

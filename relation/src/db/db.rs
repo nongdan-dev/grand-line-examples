@@ -7,6 +7,8 @@ pub async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
         "CREATE TABLE user (
             id TEXT PRIMARY KEY NOT NULL
             , name TEXT NOT NULL
+            , email TEXT NOT NULL
+            , hashed_password TEXT NOT NULL
             , created_at TEXT NOT NULL
             , updated_at TEXT
         );",
@@ -14,8 +16,16 @@ pub async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     .await?;
 
     User::insert_many(vec![
-        active_create!(User { name: "Olivia" }),
-        active_create!(User { name: "Peter" }),
+        active_create!(User {
+            name: "Olivia",
+            email: "olivia@fringe.org",
+            hashed_password: "",
+        }),
+        active_create!(User {
+            name: "Peter",
+            email: "peter@fringe.org",
+            hashed_password: "",
+        }),
     ])
     .exec(&db)
     .await?;

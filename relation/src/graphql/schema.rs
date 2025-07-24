@@ -1,6 +1,5 @@
 use crate::prelude::*;
-use async_graphql::{extensions::Tracing, EmptyMutation, EmptySubscription, MergedObject, Schema};
-use std::sync::Arc;
+use async_graphql::{EmptyMutation, EmptySubscription, MergedObject, Schema, extensions::Tracing};
 
 #[derive(Default, MergedObject)]
 pub struct Query(

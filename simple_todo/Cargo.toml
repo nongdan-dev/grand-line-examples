@@ -1,7 +1,7 @@
 [package]
 name = "grand-line-examples-simple-todo"
 version = "0.0.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 grand-line = { path = "../../grand-line", features = ["sqlite", "axum", "tracing"] }
