@@ -140,7 +140,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 // ----------------------------------------------------------------------------
 // init schema
 
-use async_graphql::{EmptySubscription, MergedObject, Schema, extensions::Tracing};
+use async_graphql::{EmptySubscription, MergedObject, Schema};
 
 #[derive(Default, MergedObject)]
 struct Query(
@@ -162,7 +162,6 @@ struct Mutation(
 
 fn init_schema(db: Arc<DatabaseConnection>) -> Schema<Query, Mutation, EmptySubscription> {
     Schema::build(Query::default(), Mutation::default(), EmptySubscription)
-        .extension(Tracing)
         .extension(GrandLineExtension)
         .data(db)
         .finish()
