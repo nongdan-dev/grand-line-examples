@@ -39,6 +39,6 @@ pub fn graphql_router(db: &sea_orm::DatabaseConnection) -> Router {
     let schema = init_schema(db.clone());
     Router::new().route(
         "/api/graphql",
-        post(graphql_handler).with_state(AppState { schema, db: arc }),
+        post(graphql_handler).with_state(AppState { schema, db: arc })
     )
 }

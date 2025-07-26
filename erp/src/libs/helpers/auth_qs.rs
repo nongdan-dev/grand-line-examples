@@ -6,6 +6,7 @@ pub struct IdSecret {
     pub id: String,
     pub secret: String,
 }
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum QsError {
     SerializationError(qs::Error),

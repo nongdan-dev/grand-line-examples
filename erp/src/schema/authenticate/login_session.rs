@@ -1,6 +1,6 @@
 use grand_line::*;
 use crate::prelude::*;
-#[model]
+#[model(no_by_id = true, no_deleted_at = true)]
 pub struct LoginSession {
     pub user_id: String,
     pub secret: String,

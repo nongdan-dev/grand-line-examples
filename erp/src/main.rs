@@ -8,6 +8,8 @@ mod prelude {
     pub use crate::custom_scalars::*;
     pub use crate::schema::*;
 }
+use std::net::SocketAddr;
+
 use routers::graphql_router;
 use crate::prelude::*;
 use axum::serve;
@@ -28,7 +30,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let listener = TcpListener::bind(addr).await?;
 
     println!("listening on port {}", port);
-    serve(listener, app).await?;
+    serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
     Ok(())
 }

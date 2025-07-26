@@ -12,6 +12,8 @@ use grand_line::axum::http::header;
 use grand_line::chrono::Utc;
 use grand_line::sea_orm::ActiveValue::Set;
 use grand_line::sea_orm::{ActiveModelTrait, EntityTrait, TryIntoModel};
+use grand_line::axum::http::HeaderValue;
+
 
 #[derive(Debug, Clone)]
 pub enum AuthError {
@@ -124,7 +126,8 @@ pub fn set_login_cookie(ctx: &Context<'_>, s: &LoginSessionSql) {
     let cookie_value = match qs_id_secret(&id_secret) {
         Ok(val) => val,
         Err(e) => {
-            return Err(e);
+            eprintln!("Error generating cookie value: {:?}", e);
+            return;
         }
     };
     let base_cookie = Cookie::new(LOGIN_SESSION_COOKIE_KEY, cookie_value);
@@ -138,5 +141,8 @@ pub fn set_login_cookie(ctx: &Context<'_>, s: &LoginSessionSql) {
                 + cookie::time::Duration::milliseconds(LOGIN_SESSION_EXPIRES as i64),
         )
         .build();
-    ctx.append_http_header(header::SET_COOKIE, cookie.to_string().parse().unwrap())
+    ctx.append_http_header(
+        header::SET_COOKIE,
+        HeaderValue::from_str(&cookie.to_string()).unwrap(),
+    );
 }

@@ -1,6 +1,10 @@
-mod user;
-mod login_session;
+mod create_user;
 mod login;
-pub use user::*;
-pub use login_session::*;
+mod login_session;
+mod search_user;
+mod user;
+pub use create_user::*;
 pub use login::*;
+pub use login_session::*;
+pub use user::*;
+pub use search_user::*;
