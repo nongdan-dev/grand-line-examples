@@ -4,10 +4,17 @@ version = "0.0.0"
 edition = "2021"
 
 [dependencies]
+base64 = "0.22.1"
 cookie = "0.18.1"
 # grand_line
 grand-line = { path = "../../grand-line", features = ["sqlite", "axum", "tracing"] }
+pbkdf2 = "0.12.2"
+rand = "0.9.2"
+rand_core = "0.9.3"
 regex = "1.11.1"
 serde = { version = "1.0.210", default-features = false, features = ["derive", "std"] }
 serde_qs = "0.15.0"
+sha2 = "0.10.9"
+subtle = "2.6.1"
+v = "0.1.0"
 validator = "0.20.0"

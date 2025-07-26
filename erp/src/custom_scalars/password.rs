@@ -3,7 +3,7 @@ use grand_line::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
-pub struct Password(String);
+pub struct Password( pub String);
 
 fn validate_password(s: &str) -> bool {
     let len_ok = s.len() >= 8;

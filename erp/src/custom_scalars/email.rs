@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use validator::ValidateEmail;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
-pub struct Email(String);
+pub struct Email(pub String);
 
 #[Scalar(name = "Email")]
 impl ScalarType for Email {
