@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use grand_line::*;
 
-#[model(no_deleted_at = true)]
+#[model]
 pub struct Todo {
     pub content: String,
     pub done: bool,

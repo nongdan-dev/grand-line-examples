@@ -3,17 +3,17 @@ use crate::prelude::*;
 pub async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     let db = Database::connect("sqlite::memory:").await?;
 
-    db.execute_unprepared(
-        "CREATE TABLE user (
-            id TEXT PRIMARY KEY NOT NULL
-            , name TEXT NOT NULL
-            , email TEXT NOT NULL
-            , hashed_password TEXT NOT NULL
-            , created_at TEXT NOT NULL
-            , updated_at TEXT
-        );",
-    )
-    .await?;
+    let b = db.get_database_backend();
+    let s = sea_orm::Schema::new(b);
+    let stmts = vec![
+        s.create_table_from_entity(User),
+        s.create_table_from_entity(Org),
+        s.create_table_from_entity(UserInOrg),
+        s.create_table_from_entity(Todo),
+    ];
+    for s in stmts {
+        db.execute(b.build(&s)).await?;
+    }
 
     User::insert_many(vec![
         active_create!(User {
@@ -33,32 +33,12 @@ pub async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     let user_id0 = users.get(0).map(|u| u.id.clone());
     let user_id1 = users.get(1).map(|u| u.id.clone());
 
-    db.execute_unprepared(
-        "CREATE TABLE org (
-            id TEXT PRIMARY KEY NOT NULL
-            , name TEXT NOT NULL
-            , created_at TEXT NOT NULL
-            , updated_at TEXT
-        );",
-    )
-    .await?;
-
     Org::insert_many(vec![active_create!(Org { name: "Fringe" })])
         .exec(&db)
         .await?;
     let orgs = Org::find().all(&db).await?;
     let org_id0 = orgs.get(0).map(|o| o.id.clone());
 
-    db.execute_unprepared(
-        "CREATE TABLE user_in_org (
-            id TEXT PRIMARY KEY NOT NULL
-            , user_id TEXT NOT NULL
-            , org_id TEXT NOT NULL
-            , created_at TEXT NOT NULL
-            , updated_at TEXT
-        );",
-    )
-    .await?;
     UserInOrg::insert_many(vec![
         active_create!(UserInOrg {
             user_id: user_id0.as_ref().unwrap().to_string(),
@@ -70,19 +50,6 @@ pub async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
         }),
     ])
     .exec(&db)
-    .await?;
-
-    db.execute_unprepared(
-        "CREATE TABLE todo (
-            id TEXT PRIMARY KEY NOT NULL
-            , content TEXT NOT NULL
-            , done INT(1) NOT NULL
-            , created_at TEXT NOT NULL
-            , created_by_id TEXT
-            , updated_at TEXT
-            , updated_by_id TEXT
-        );",
-    )
     .await?;
 
     Todo::insert_many(vec![

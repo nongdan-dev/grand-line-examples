@@ -4,5 +4,5 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-grand-line = { path = "../../grand-line", features = ["sqlite", "axum", "tracing"] }
+grand-line = { path = "../../grand-line", features = ["sqlite", "axum"] }
 serde = { version = "1.0.219", default-features = false, features = ["derive", "std"] }

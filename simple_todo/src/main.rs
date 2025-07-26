@@ -3,7 +3,7 @@ use serde_json::to_string as json;
 
 // create a sea orm model and graphql object
 // id, created_at, updated_at... will be inserted automatically
-#[model(no_by_id = true, no_deleted_at = true)]
+#[model]
 pub struct Todo {
     pub content: String,
     pub done: bool,
@@ -74,7 +74,7 @@ fn resolver() {
 }
 
 // custom resolver name and inputs
-#[update(Todo, resolver_inputs = true)]
+#[update(Todo, resolver_inputs)]
 fn todoToggleDone(id: String) {
     println!("todoToggleDone id={}", id);
     let todo = Todo::must_find_by_id(tx, &id).await?;
@@ -121,8 +121,6 @@ use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    init_tracing();
-
     let db = Arc::new(init_db().await?);
     let schema = init_schema(db);
     let svc = GraphQL::new(schema);
@@ -176,16 +174,10 @@ fn init_schema(db: Arc<DatabaseConnection>) -> Schema<Query, Mutation, EmptySubs
 async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     let db = Database::connect("sqlite::memory:").await?;
 
-    db.execute_unprepared(
-        "CREATE TABLE todo (
-            id TEXT PRIMARY KEY NOT NULL
-            , content TEXT NOT NULL
-            , done INT(1) NOT NULL
-            , created_at TEXT NOT NULL
-            , updated_at TEXT
-        );",
-    )
-    .await?;
+    let backend = db.get_database_backend();
+    let schema = sea_orm::Schema::new(backend);
+    let stmt = schema.create_table_from_entity(Todo);
+    db.execute(backend.build(&stmt)).await?;
 
     Todo::insert_many(vec![
         active_create!(Todo {
@@ -209,14 +201,4 @@ async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     .await?;
 
     Ok(db)
-}
-
-// ----------------------------------------------------------------------------
-// init tracing
-
-use tracing::Level;
-use tracing_subscriber::fmt::Subscriber;
-
-fn init_tracing() {
-    Subscriber::builder().with_max_level(Level::DEBUG).init();
 }
