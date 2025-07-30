@@ -106,12 +106,10 @@ pub async fn create_login_session(
     };
 
     let saved_model = active_model.save(auth_ctx.db.as_ref()).await.map_err(|e| {
-        eprintln!("Database error: {:?}", e);
         AuthError::AuthenticationFailed
     })?;
 
     let model = saved_model.try_into_model().map_err(|e| {
-        eprintln!("Model conversion error: {:?}", e);
         AuthError::AuthenticationFailed
     })?;
 

@@ -7,9 +7,8 @@ async fn resolver() {
     let email = email_lower.trim().to_string();
     let password = data.password.0.clone();
     let hashed_password = hash_password(&password);
-    let am = active_create!(User {
+    active_create!(User {
         email,
         hashed_password: hashed_password
     });
-    am.insert(tx).await?.into()
 }
