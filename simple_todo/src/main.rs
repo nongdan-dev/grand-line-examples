@@ -53,10 +53,9 @@ pub struct TodoCreate {
 #[create(Todo)]
 fn resolver() {
     println!("todoCreate data={}", json(&data)?);
-    let am = active_create!(Todo {
-        content:data.content
-    });
-    am.insert(tx).await?.into()
+    active_create!(Todo {
+        content: data.content
+    })
 }
 
 // update a Todo content
