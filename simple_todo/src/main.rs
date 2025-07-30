@@ -53,7 +53,7 @@ pub struct TodoCreate {
 #[create(Todo)]
 fn resolver() {
     println!("todoCreate data={}", json(&data)?);
-    active_create!(Todo {
+    am_create!(Todo {
         content: data.content
     })
 }
@@ -66,19 +66,20 @@ pub struct TodoUpdate {
 #[update(Todo)]
 fn resolver() {
     println!("todoUpdate id={} data={}", id, json(&data)?);
-    Todo::must_exists_by_id(tx, &id).await?;
-    active_update!(Todo {
+    Todo::try_exists_by_id(tx, &id).await?;
+    am_update!(Todo {
         id: id.clone(),
         content: data.content
     })
 }
 
-// custom resolver name and inputs
+// toggle a Todo done using update macro
+// with custom resolver name and inputs
 #[update(Todo, resolver_inputs)]
 fn todoToggleDone(id: String) {
     println!("todoToggleDone id={}", id);
-    let todo = Todo::must_find_by_id(tx, &id).await?;
-    active_update!(Todo {
+    let todo = Todo::try_find_by_id(tx, &id).await?;
+    am_update!(Todo {
         id: id.clone(),
         done: !todo.done,
     })
@@ -121,9 +122,7 @@ use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let db = Arc::new(init_db().await?);
-    let schema = init_schema(db);
-    let svc = GraphQL::new(schema);
+    let svc = GraphQL::new(schema(&db().await?));
     let router = get_service(svc.clone()).post_service(svc);
     let app = Router::new().route("/api/graphql", router);
 
@@ -160,17 +159,17 @@ struct Mutation(
     TodoDeleteDoneMutation,
 );
 
-fn init_schema(db: Arc<DatabaseConnection>) -> Schema<Query, Mutation, EmptySubscription> {
+fn schema(db: &DatabaseConnection) -> Schema<Query, Mutation, EmptySubscription> {
     Schema::build(Query::default(), Mutation::default(), EmptySubscription)
         .extension(GrandLineExtension)
-        .data(db)
+        .data(Arc::new(db.clone()))
         .finish()
 }
 
 // ----------------------------------------------------------------------------
 // init db
 
-async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
+async fn db() -> Result<DatabaseConnection, Box<dyn Error>> {
     let db = Database::connect("sqlite::memory:").await?;
 
     let backend = db.get_database_backend();
@@ -179,19 +178,19 @@ async fn init_db() -> Result<DatabaseConnection, Box<dyn Error>> {
     db.execute(backend.build(&stmt)).await?;
 
     Todo::insert_many(vec![
-        active_create!(Todo {
+        am_create!(Todo {
             content: "2023 good bye",
             done: true,
         }),
-        active_create!(Todo {
+        am_create!(Todo {
             content: "2023 great",
             done: true,
         }),
-        active_create!(Todo {
+        am_create!(Todo {
             content: "2024 hello",
             done: false,
         }),
-        active_create!(Todo {
+        am_create!(Todo {
             content: "2024 awesome",
             done: false,
         }),
