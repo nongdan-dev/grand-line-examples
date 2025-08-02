@@ -103,7 +103,7 @@ fn todoCountDone() -> u64 {
 fn todoDeleteDone() -> Vec<TodoGql> {
     let arr = filter!(Todo { done: true })
         .select()
-        .gql_select_id()
+        .gql_select_id()?
         .all(tx)
         .await?;
     let f = filter!(Todo {
