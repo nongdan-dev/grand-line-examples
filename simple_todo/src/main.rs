@@ -46,7 +46,7 @@ fn resolver() {
 }
 
 // create a new Todo
-#[input]
+#[gql_input]
 pub struct TodoCreate {
     pub content: String,
 }
@@ -59,7 +59,7 @@ fn resolver() {
 }
 
 // update a Todo content
-#[input]
+#[gql_input]
 pub struct TodoUpdate {
     pub content: String,
 }
