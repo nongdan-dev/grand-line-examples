@@ -121,7 +121,7 @@ use axum::{Router, routing::get_service, serve};
 use tokio::net::TcpListener;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let svc = GraphQL::new(schema(&db().await?));
     let router = get_service(svc.clone()).post_service(svc);
     let app = Router::new().route("/api/graphql", router);
@@ -169,7 +169,7 @@ fn schema(db: &DatabaseConnection) -> Schema<Query, Mutation, EmptySubscription>
 // ----------------------------------------------------------------------------
 // init db
 
-async fn db() -> Result<DatabaseConnection, Box<dyn Error>> {
+async fn db() -> Result<DatabaseConnection, Box<dyn Error + Send + Sync>> {
     let db = Database::connect("sqlite::memory:").await?;
 
     let backend = db.get_database_backend();
