@@ -66,7 +66,7 @@ pub struct TodoUpdate {
 #[update(Todo)]
 fn resolver() {
     println!("todoUpdate id={} data={}", id, json(&data)?);
-    Todo::try_exists_by_id(tx, &id).await?;
+    Todo::find_by_id(&id).try_exists(tx).await?;
     am_update!(Todo {
         id: id.clone(),
         content: data.content
@@ -78,7 +78,7 @@ fn resolver() {
 #[update(Todo, resolver_inputs)]
 fn todoToggleDone(id: String) {
     println!("todoToggleDone id={}", id);
-    let todo = Todo::try_find_by_id(tx, &id).await?;
+    let todo = Todo::find_by_id(&id).try_one(tx).await?;
     am_update!(Todo {
         id: id.clone(),
         done: !todo.done,
@@ -109,7 +109,7 @@ fn todoDeleteDone() -> Vec<TodoGql> {
     let f = filter!(Todo {
         id_in: arr.iter().filter_map(|v| v.id.clone()).collect()
     });
-    Todo::delete_many().filter(f.condition()).exec(tx).await?;
+    Todo::delete_many().filter(f.cond()).exec(tx).await?;
     arr
 }
 
@@ -168,6 +168,8 @@ fn schema(db: &DatabaseConnection) -> Schema<Query, Mutation, EmptySubscription>
 
 // ----------------------------------------------------------------------------
 // init db
+
+use sea_orm::{prelude::*, *};
 
 async fn db() -> Result<DatabaseConnection, Box<dyn Error + Send + Sync>> {
     let db = Database::connect("sqlite::memory:").await?;
