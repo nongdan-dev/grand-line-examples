@@ -2,7 +2,7 @@ use grand_line::*;
 use serde_json::to_string as json;
 
 // create a sea orm model and graphql object
-// id, created_at, updated_at... will be inserted automatically
+// id, created_at, updated_at, deleted_at... will be inserted automatically
 #[model]
 pub struct Todo {
     pub content: String,
