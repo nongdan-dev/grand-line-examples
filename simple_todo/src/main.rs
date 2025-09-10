@@ -2,14 +2,15 @@ use grand_line::*;
 use serde_json::to_string as json;
 
 // create a sea orm model and graphql object
-// id, created_at, updated_at, deleted_at... will be inserted automatically
+// id, created_at, updated_at, deleted_at... are inserted automatically
 #[model]
 pub struct Todo {
     pub content: String,
     pub done: bool,
 }
 
-// search Todo with filter, sort, pagination
+// search Todo with filter, sort, pagination from client
+// variables are generated automatically
 #[search(Todo)]
 fn resolver() {
     println!(
@@ -21,7 +22,7 @@ fn resolver() {
     (None, None)
 }
 
-// count Todo with filter
+// count Todo with filter from client
 #[count(Todo)]
 fn resolver() {
     println!("todoCount filter={}", json(&filter)?);
@@ -30,13 +31,14 @@ fn resolver() {
 
 // we can also have a custom name
 // with extra filter, or default sort in the resolver as well
+// the extra will be combined as and condition with the value from client
 #[search(Todo)]
 fn todoSearch2024() {
-    let f = filter_some!(Todo {
+    let extra_filter = filter_some!(Todo {
         content_starts_with: "2024",
     });
-    let o = order_by_some!(Todo [DoneAsc, ContentAsc]);
-    (f, o)
+    let default_order_by = order_by_some!(Todo [DoneAsc, ContentAsc]);
+    (extra_filter, default_order_by)
 }
 
 // get detail of a Todo by id
@@ -89,28 +91,25 @@ fn todoToggleDone(id: String) {
 #[delete(Todo)]
 fn resolver() {
     println!("todoDelete id={}", id);
+    Todo::find_by_id(&id).try_exists(tx).await?;
 }
 
 // manual query: count number of all done Todo
 #[query]
 fn todoCountDone() -> u64 {
     let f = filter!(Todo { done: true });
-    f.select().count(tx).await?
+    f.into_select().count(tx).await?
 }
 
-// manual mutation: delete all done Todo
+// manual mutation: soft delete all done Todo
 #[mutation]
 fn todoDeleteDone() -> Vec<TodoGql> {
-    let arr = filter!(Todo { done: true })
-        .select()
-        .gql_select_id()?
-        .all(tx)
+    let f = filter!(Todo { done: true });
+    Todo::soft_delete_many()?
+        .filter(f.into_condition())
+        .exec(tx)
         .await?;
-    let f = filter!(Todo {
-        id_in: arr.iter().filter_map(|v| v.id.clone()).collect()
-    });
-    Todo::delete_many().filter(f.cond()).exec(tx).await?;
-    arr
+    f.gql_select_id()?.all(tx).await?
 }
 
 // ----------------------------------------------------------------------------
