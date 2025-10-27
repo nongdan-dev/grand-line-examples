@@ -105,11 +105,13 @@ fn todoCountDone() -> u64 {
 #[mutation]
 fn todoDeleteDone() -> Vec<TodoGql> {
     let f = filter!(Todo { done: true });
+    let todo = f.gql_select_id()?.all(tx).await?;
+    let ids = todo.iter().filter_map(|t| t.id.clone()).collect::<Vec<_>>();
     Todo::soft_delete_many()?
-        .filter(f.into_condition())
+        .filter(TodoColumn::Id.is_in(ids))
         .exec(tx)
         .await?;
-    f.gql_select_id()?.all(tx).await?
+    todo
 }
 
 // ----------------------------------------------------------------------------
