@@ -13,39 +13,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "_axum"
-version = "0.0.0"
-dependencies = [
- "_core",
- "async-graphql-axum",
- "axum",
- "cookie",
- "thiserror 2.0.17",
- "tower",
- "tower-http",
-]
-
-[[package]]
-name = "_core"
-version = "0.0.0"
-dependencies = [
- "_macro_proc",
- "_macro_utils",
- "_macro_utils_proc",
- "async-graphql",
- "async-trait",
- "chrono",
- "sea-orm",
- "serde",
- "serde_json",
- "serde_with",
- "sqlx",
- "thiserror 2.0.17",
- "tokio",
- "ulid",
-]
-
-[[package]]
 name = "_macro_proc"
 version = "0.0.0"
 dependencies = [
@@ -953,8 +920,25 @@ dependencies = [
 name = "grand-line"
 version = "0.0.0"
 dependencies = [
- "_axum",
- "_core",
+ "_macro_proc",
+ "_macro_utils",
+ "_macro_utils_proc",
+ "async-graphql",
+ "async-graphql-axum",
+ "async-trait",
+ "axum",
+ "chrono",
+ "cookie",
+ "sea-orm",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "sqlx",
+ "thiserror 2.0.17",
+ "tokio",
+ "tower",
+ "tower-http",
+ "ulid",
 ]
 
 [[package]]
