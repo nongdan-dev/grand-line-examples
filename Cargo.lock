@@ -13,47 +13,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "_macro_proc"
-version = "0.0.0"
-dependencies = [
- "_macro_utils",
- "_macro_utils_proc",
- "heck 0.5.0",
- "maplit",
- "proc-macro2",
- "quote",
- "serde",
- "strum 0.27.2",
- "strum_macros 0.27.2",
- "syn 2.0.108",
-]
-
-[[package]]
-name = "_macro_utils"
-version = "0.0.0"
-dependencies = [
- "heck 0.5.0",
- "maplit",
- "proc-macro2",
- "quote",
- "serde",
- "syn 2.0.108",
-]
-
-[[package]]
-name = "_macro_utils_proc"
-version = "0.0.0"
-dependencies = [
- "_macro_utils",
- "heck 0.5.0",
- "maplit",
- "proc-macro2",
- "quote",
- "serde",
- "syn 2.0.108",
-]
-
-[[package]]
 name = "ahash"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -920,15 +879,15 @@ dependencies = [
 name = "grand-line"
 version = "0.0.0"
 dependencies = [
- "_macro_proc",
- "_macro_utils",
- "_macro_utils_proc",
  "async-graphql",
  "async-graphql-axum",
  "async-trait",
  "axum",
  "chrono",
  "cookie",
+ "macro_proc",
+ "macro_utils",
+ "macro_utils_proc",
  "sea-orm",
  "serde",
  "serde_json",
@@ -1282,6 +1241,47 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37ee39891760e7d94734f6f63fedc29a2e4a152f836120753a72503f09fcf904"
 dependencies = [
  "hashbrown 0.14.5",
+]
+
+[[package]]
+name = "macro_proc"
+version = "0.0.0"
+dependencies = [
+ "heck 0.5.0",
+ "macro_utils",
+ "macro_utils_proc",
+ "maplit",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
+ "syn 2.0.108",
+]
+
+[[package]]
+name = "macro_utils"
+version = "0.0.0"
+dependencies = [
+ "heck 0.5.0",
+ "maplit",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 2.0.108",
+]
+
+[[package]]
+name = "macro_utils_proc"
+version = "0.0.0"
+dependencies = [
+ "heck 0.5.0",
+ "macro_utils",
+ "maplit",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 2.0.108",
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-use grand_line::*;
+use grand_line::prelude::*;
 use serde_json::to_string as json;
 
 // create a sea orm model and graphql object
@@ -140,8 +140,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 // ----------------------------------------------------------------------------
 // init schema
 
-use async_graphql::{EmptySubscription, MergedObject, Schema};
-
 #[derive(Default, MergedObject)]
 struct Query(
     TodoSearchQuery,
@@ -170,13 +168,11 @@ fn schema(db: &DatabaseConnection) -> Schema<Query, Mutation, EmptySubscription>
 // ----------------------------------------------------------------------------
 // init db
 
-use sea_orm::{prelude::*, *};
-
 async fn db() -> Result<DatabaseConnection, Box<dyn Error + Send + Sync>> {
     let db = Database::connect("sqlite::memory:").await?;
 
     let backend = db.get_database_backend();
-    let schema = sea_orm::Schema::new(backend);
+    let schema = DbSchema::new(backend);
     let stmt = schema.create_table_from_entity(Todo);
     db.execute(backend.build(&stmt)).await?;
 
