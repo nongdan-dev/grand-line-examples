@@ -68,7 +68,7 @@ pub struct TodoUpdate {
 #[update(Todo)]
 fn resolver() {
     println!("todoUpdate id={} data={}", id, json(&data)?);
-    Todo::find_by_id(&id).try_exists(tx).await?;
+    Todo::find_by_id(&id).exists_or_404(tx).await?;
     am_update!(Todo {
         id: id.clone(),
         content: data.content
@@ -80,7 +80,7 @@ fn resolver() {
 #[update(Todo, resolver_inputs)]
 fn todoToggleDone(id: String) {
     println!("todoToggleDone id={}", id);
-    let todo = Todo::find_by_id(&id).try_one(tx).await?;
+    let todo = Todo::find_by_id(&id).one_or_404(tx).await?;
     am_update!(Todo {
         id: id.clone(),
         done: !todo.done,
@@ -91,7 +91,7 @@ fn todoToggleDone(id: String) {
 #[delete(Todo)]
 fn resolver() {
     println!("todoDelete id={}", id);
-    Todo::find_by_id(&id).try_exists(tx).await?;
+    Todo::find_by_id(&id).exists_or_404(tx).await?;
 }
 
 // manual query: count number of all done Todo
